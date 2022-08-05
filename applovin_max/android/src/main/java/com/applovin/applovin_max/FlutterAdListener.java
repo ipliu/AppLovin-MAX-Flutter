@@ -99,3 +99,48 @@ class FlutterBannerAdListener extends FlutterAdListener implements MaxAdViewAdLi
         manager.onAdCollapsed(adId);
     }
 }
+
+/**
+ * Ad listener for mrec ads.
+ */
+class FlutterMrecAdListener extends FlutterAdListener implements MaxAdViewAdListener {
+
+    @NonNull final WeakReference<FlutterAdLoadCallback> adLoadCallbackWeakReference;
+
+    FlutterMrecAdListener(
+            int adId, @NonNull AdInstanceManager manager, FlutterAdLoadCallback adLoadCallback) {
+        super(adId, manager);
+        adLoadCallbackWeakReference = new WeakReference<>(adLoadCallback);
+    }
+
+    @Override
+    public void onAdLoaded(MaxAd ad) {
+        if (adLoadCallbackWeakReference.get() != null) {
+            adLoadCallbackWeakReference.get().onAdLoaded(ad);
+        }
+    }
+
+    /**
+     *  DO NOT USE - THIS IS RESERVED FOR FULLSCREEN ADS ONLY
+     *  AND WILL BE REMOVED IN A FUTURE SDK RELEASE
+     */
+    @Override
+    public void onAdDisplayed(MaxAd ad) { }
+
+    /**
+     *  DO NOT USE - THIS IS RESERVED FOR FULLSCREEN ADS ONLY
+     *  AND WILL BE REMOVED IN A FUTURE SDK RELEASE
+     */
+    @Override
+    public void onAdHidden(MaxAd ad) { }
+
+    @Override
+    public void onAdExpanded(MaxAd ad) {
+        manager.onAdExpanded(adId);
+    }
+
+    @Override
+    public void onAdCollapsed(MaxAd ad) {
+        manager.onAdCollapsed(adId);
+    }
+}

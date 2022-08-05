@@ -194,6 +194,26 @@ class AdInstanceManager {
     );
   }
 
+  /// Starts loading the ad if not previously loaded.
+  ///
+  /// Does nothing if we have already tried to load the ad.
+  Future<void> loadMrecAd(MrecAd ad) {
+    if (adIdFor(ad) != null) {
+      return Future<void>.value();
+    }
+
+    final int adId = _nextAdId++;
+    _loadedAds[adId] = ad;
+    return channel.invokeMethod<void>(
+      'loadMrecAd',
+      <dynamic, dynamic>{
+        'adId': adId,
+        'adUnitId': ad.adUnitId,
+        'placementId': ad.placementId,
+      },
+    );
+  }
+
   /// Free the plugin resources associated with this ad.
   ///
   /// Disposing a banner ad that's been shown removes it from the screen.

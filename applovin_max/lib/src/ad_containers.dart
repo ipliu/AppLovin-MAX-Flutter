@@ -270,3 +270,41 @@ class BannerAd extends AdWithView {
     return await instanceManager.getAdSize(this);
   }
 }
+
+/// A mrec ad.
+///
+/// This ad can either be overlaid on top of all flutter widgets as a static
+/// view or displayed as a typical Flutter widget. To display as a widget,
+/// instantiate an [AdWidget] with this as a parameter.
+class MrecAd extends AdWithView {
+  /// Creates a [MrecAd].
+  ///
+  /// A valid [adUnitId] and nonnull [listener] is required.
+  MrecAd({
+    required String adUnitId,
+    required this.listener,
+    required this.size,
+    String? placementId,
+  }) : super(adUnitId: adUnitId, placementId: placementId, listener: listener);
+
+  /// Represents the size of a mrec ad.
+  final AdSize size;
+
+  /// A listener for receiving events in the ad lifecycle.
+  @override
+  final MrecAdListener listener;
+
+  @override
+  Future<void> load() async {
+    await instanceManager.loadMrecAd(this);
+  }
+
+  /// Returns the AdSize of the associated platform ad object.
+  ///
+  /// The dimensions of the [AdSize] returned here may differ from [size],
+  /// depending on what type of [AdSize] was used.
+  /// The future will resolve to null if [load] has not been called yet.
+  Future<AdSize?> getPlatformAdSize() async {
+    return await instanceManager.getAdSize(this);
+  }
+}

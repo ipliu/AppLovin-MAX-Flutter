@@ -1181,6 +1181,18 @@ public class AppLovinMAX
                     bannerAd, requireNonNull(call.<Integer>argument("adId")));
             bannerAd.load();
             result.success(null);
+        } else if ("loadMrecAd".equals(call.method)) {
+            final FlutterMrecAd mrecAd =
+                    new FlutterMrecAd(
+                            requireNonNull(call.<Integer>argument("adId")),
+                            instanceManager,
+                            requireNonNull(call.argument("adUnitId")),
+                            call.argument("placement"),
+                            call.argument("customData"));
+            instanceManager.trackAd(
+                    mrecAd, requireNonNull(call.<Integer>argument("adId")));
+            mrecAd.load();
+            result.success(null);
         } else if ("disposeAd".equals(call.method)) {
             instanceManager.disposeAd(requireNonNull(call.<Integer>argument("adId")));
             result.success(null);
@@ -1192,6 +1204,8 @@ public class AppLovinMAX
                 result.success(null);
             } else if (ad instanceof FlutterBannerAd) {
                 result.success(((FlutterBannerAd) ad).getAdSize());
+            } else if (ad instanceof FlutterMrecAd) {
+                result.success(((FlutterMrecAd) ad).getAdSize());
             } else {
                 result.error(
                         "unexpected_ad_type",

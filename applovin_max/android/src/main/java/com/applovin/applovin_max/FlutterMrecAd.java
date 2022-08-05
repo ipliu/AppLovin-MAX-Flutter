@@ -13,9 +13,9 @@ import io.flutter.plugin.platform.PlatformView;
 import io.flutter.util.Preconditions;
 
 /** A wrapper for {@link MaxAdView}. */
-class FlutterBannerAd extends FlutterAd implements FlutterAdLoadCallback {
+class FlutterMrecAd extends FlutterAd implements FlutterAdLoadCallback {
 
-    private static final String TAG = "FlutterBannerAd";
+    private static final String TAG = "FlutterMrecAd";
 
     @NonNull private final AdInstanceManager manager;
     @NonNull private final String adUnitId;
@@ -25,8 +25,8 @@ class FlutterBannerAd extends FlutterAd implements FlutterAdLoadCallback {
     private boolean isLoaded = false;
     private boolean isDisplayed = false;
 
-    /** Constructs the FlutterBannerAd. */
-    public FlutterBannerAd(
+    /** Constructs the FlutterMrecAd. */
+    public FlutterMrecAd(
             int adId,
             @NonNull AdInstanceManager manager,
             @NonNull String adUnitId,
@@ -53,16 +53,16 @@ class FlutterBannerAd extends FlutterAd implements FlutterAdLoadCallback {
     @Override
     void load() {
         if (manager.getActivity() == null) {
-            Log.e(TAG, "Tried to show banner ad before activity was bound to the plugin.");
+            Log.e(TAG, "Tried to show mrec ad before activity was bound to the plugin.");
             return;
         }
 
         adView = new MaxAdView(
                 adUnitId,
-                MaxAdFormat.BANNER,
+                MaxAdFormat.MREC,
                 AppLovinMAX.getInstance().getSdk(),
                 manager.getActivity());
-        adView.setListener(new FlutterBannerAdListener(adId, manager, this));
+        adView.setListener(new FlutterMrecAdListener(adId, manager, this));
 
         adView.setPlacement(placement);
         adView.setCustomData(customData);

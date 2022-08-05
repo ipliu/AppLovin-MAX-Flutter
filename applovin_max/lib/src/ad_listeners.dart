@@ -82,6 +82,47 @@ class BannerAdListener extends AdWithViewListener {
   );
 }
 
+/// A listener for receiving notifications for the lifecycle of a [MrecAd].
+class MrecAdListener extends AdWithViewListener {
+  /// Called when the ad has expanded full screen.
+  final AdEventCallback? onAdExpanded;
+
+  /// Called when the ad has collapsed back to its original size.
+  final AdEventCallback? onAdCollapsed;
+
+  /// Constructs a [MrecAdListener] that notifies for the provided event callbacks.
+  ///
+  /// Typically you will override [onAdLoaded] and [onAdLoadFailed]:
+  /// ```dart
+  /// MrecAdListener(
+  ///   onAdLoaded: (ad) {
+  ///     // Ad successfully loaded - display an AdWidget with the mrec ad.
+  ///   },
+  ///   onAdLoadFailed: (ad, error) {
+  ///     // Ad failed to load - log the error and dispose the ad.
+  ///   },
+  ///   ...
+  /// )
+  /// ```
+  const MrecAdListener({
+    AdEventCallback? onAdLoaded,
+    AdLoadErrorCallback? onAdLoadFailed,
+    AdEventCallback? onAdDisplayed,
+    AdLoadErrorCallback? onAdDisplayFailed,
+    AdEventCallback? onAdHidden,
+    AdEventCallback? onAdClicked,
+    this.onAdExpanded,
+    this.onAdCollapsed,
+  }) : super(
+    onAdLoaded: onAdLoaded,
+    onAdLoadFailed: onAdLoadFailed,
+    onAdDisplayed: onAdDisplayed,
+    onAdDisplayFailed: onAdDisplayFailed,
+    onAdHidden: onAdHidden,
+    onAdClicked: onAdClicked,
+  );
+}
+
 /// Base Ad Listener
 abstract class AdListener {
   final Function(MaxAd ad) onAdLoadedCallback;
