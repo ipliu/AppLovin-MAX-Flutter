@@ -1,4 +1,86 @@
 import 'package:applovin_max/src/ad_classes.dart';
+import 'package:flutter/foundation.dart';
+
+import 'ad_containers.dart';
+
+/// The callback type to handle an event occurring for an [Ad].
+typedef AdEventCallback = void Function(Ad ad);
+
+/// The callback type to handle an error loading an [Ad].
+typedef AdLoadErrorCallback = void Function(Ad ad, AdError error);
+
+/// Shared event callbacks used in Native and Banner ads.
+abstract class AdWithViewListener {
+  /// Default constructor for [AdWithViewListener], meant to be used by subclasses.
+  @protected
+  const AdWithViewListener({
+    this.onAdLoaded,
+    this.onAdLoadFailed,
+    this.onAdDisplayed,
+    this.onAdDisplayFailed,
+    this.onAdHidden,
+    this.onAdClicked,
+  });
+
+  /// Called when an ad is successfully received.
+  final AdEventCallback? onAdLoaded;
+
+  /// Called when an ad request failed.
+  final AdLoadErrorCallback? onAdLoadFailed;
+
+  /// Called when an impression occurs on the ad.
+  final AdEventCallback? onAdDisplayed;
+
+  /// Called when an ad display failed.
+  final AdLoadErrorCallback? onAdDisplayFailed;
+
+  /// Called when the ad is hidden.
+  final AdEventCallback? onAdHidden;
+
+  /// Called when the ad is clicked.
+  final AdEventCallback? onAdClicked;
+}
+
+/// A listener for receiving notifications for the lifecycle of a [BannerAd].
+class BannerAdListener extends AdWithViewListener {
+  /// Called when the ad has expanded full screen.
+  final AdEventCallback? onAdExpanded;
+
+  /// Called when the ad has collapsed back to its original size.
+  final AdEventCallback? onAdCollapsed;
+
+  /// Constructs a [BannerAdListener] that notifies for the provided event callbacks.
+  ///
+  /// Typically you will override [onAdLoaded] and [onAdLoadFailed]:
+  /// ```dart
+  /// BannerAdListener(
+  ///   onAdLoaded: (ad) {
+  ///     // Ad successfully loaded - display an AdWidget with the banner ad.
+  ///   },
+  ///   onAdLoadFailed: (ad, error) {
+  ///     // Ad failed to load - log the error and dispose the ad.
+  ///   },
+  ///   ...
+  /// )
+  /// ```
+  const BannerAdListener({
+    AdEventCallback? onAdLoaded,
+    AdLoadErrorCallback? onAdLoadFailed,
+    AdEventCallback? onAdDisplayed,
+    AdLoadErrorCallback? onAdDisplayFailed,
+    AdEventCallback? onAdHidden,
+    AdEventCallback? onAdClicked,
+    this.onAdExpanded,
+    this.onAdCollapsed,
+  }) : super(
+    onAdLoaded: onAdLoaded,
+    onAdLoadFailed: onAdLoadFailed,
+    onAdDisplayed: onAdDisplayed,
+    onAdDisplayFailed: onAdDisplayFailed,
+    onAdHidden: onAdHidden,
+    onAdClicked: onAdClicked,
+  );
+}
 
 /// Base Ad Listener
 abstract class AdListener {

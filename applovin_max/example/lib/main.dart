@@ -345,36 +345,36 @@ class _MyAppState extends State<MyApp> {
                   )
                 ],
               ),
-              if (_isWidgetBannerShowing)
-                MaxAdView(
-                    adUnitId: _banner_ad_unit_id,
-                    adFormat: AdFormat.banner,
-                    listener: AdViewAdListener(onAdLoadedCallback: (ad) {
-                      logStatus('Banner widget ad loaded from ' + ad.networkName);
-                    }, onAdLoadFailedCallback: (adUnitId, error) {
-                      logStatus('Banner widget ad failed to load with error code ' + error.code.toString() + ' and message: ' + error.message);
-                    }, onAdClickedCallback: (ad) {
-                      logStatus('Banner widget ad clicked');
-                    }, onAdExpandedCallback: (ad) {
-                      logStatus('Banner widget ad expanded');
-                    }, onAdCollapsedCallback: (ad) {
-                      logStatus('Banner widget ad collapsed');
-                    })),
-              if (_isWidgetMRecShowing)
-                MaxAdView(
-                    adUnitId: _mrec_ad_unit_id,
-                    adFormat: AdFormat.mrec,
-                    listener: AdViewAdListener(onAdLoadedCallback: (ad) {
-                      logStatus('MREC widget ad loaded from ' + ad.networkName);
-                    }, onAdLoadFailedCallback: (adUnitId, error) {
-                      logStatus('MREC widget ad failed to load with error code ' + error.code.toString() + ' and message: ' + error.message);
-                    }, onAdClickedCallback: (ad) {
-                      logStatus('MREC widget ad clicked');
-                    }, onAdExpandedCallback: (ad) {
-                      logStatus('MREC widget ad expanded');
-                    }, onAdCollapsedCallback: (ad) {
-                      logStatus('MREC widget ad collapsed');
-                    })),
+              // if (_isWidgetBannerShowing)
+              //   MaxAdView(
+              //       adUnitId: _banner_ad_unit_id,
+              //       adFormat: AdFormat.banner,
+              //       listener: AdViewAdListener(onAdLoadedCallback: (ad) {
+              //         logStatus('Banner widget ad loaded from ' + ad.networkName);
+              //       }, onAdLoadFailedCallback: (adUnitId, error) {
+              //         logStatus('Banner widget ad failed to load with error code ' + error.code.toString() + ' and message: ' + error.message);
+              //       }, onAdClickedCallback: (ad) {
+              //         logStatus('Banner widget ad clicked');
+              //       }, onAdExpandedCallback: (ad) {
+              //         logStatus('Banner widget ad expanded');
+              //       }, onAdCollapsedCallback: (ad) {
+              //         logStatus('Banner widget ad collapsed');
+              //       })),
+              // if (_isWidgetMRecShowing)
+              //   MaxAdView(
+              //       adUnitId: _mrec_ad_unit_id,
+              //       adFormat: AdFormat.mrec,
+              //       listener: AdViewAdListener(onAdLoadedCallback: (ad) {
+              //         logStatus('MREC widget ad loaded from ' + ad.networkName);
+              //       }, onAdLoadFailedCallback: (adUnitId, error) {
+              //         logStatus('MREC widget ad failed to load with error code ' + error.code.toString() + ' and message: ' + error.message);
+              //       }, onAdClickedCallback: (ad) {
+              //         logStatus('MREC widget ad clicked');
+              //       }, onAdExpandedCallback: (ad) {
+              //         logStatus('MREC widget ad expanded');
+              //       }, onAdCollapsedCallback: (ad) {
+              //         logStatus('MREC widget ad collapsed');
+              //       })),
             ],
           )),
     );

@@ -3,9 +3,9 @@ import 'package:applovin_max/src/ad_listeners.dart';
 import 'package:applovin_max/src/enums.dart';
 import 'package:flutter/services.dart';
 
+export 'package:applovin_max/src/ad_containers.dart';
 export 'package:applovin_max/src/ad_listeners.dart';
 export 'package:applovin_max/src/enums.dart';
-export 'package:applovin_max/src/max_ad_view.dart';
 
 class AppLovinMAX {
   static const version = "2.0.0";
@@ -89,6 +89,10 @@ class AppLovinMAX {
         _rewardedAdListener?.onAdReceivedRewardCallback(createAd(adUnitId, arguments), reward);
       }
     });
+
+    /// Internal init to cleanup state for hot restart.
+    /// This is a workaround for https://github.com/flutter/flutter/issues/7160.
+    channel.invokeMethod('_init');
 
     return channel.invokeMethod('initialize', {
       'plugin_version': version,

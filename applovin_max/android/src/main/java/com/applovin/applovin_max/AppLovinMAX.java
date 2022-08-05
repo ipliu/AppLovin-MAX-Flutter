@@ -48,12 +48,17 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.StandardMethodCodec;
 
 public class AppLovinMAX
         implements FlutterPlugin, MethodCallHandler, ActivityAware, MaxAdListener, MaxAdViewAdListener, MaxRewardedAdListener
 {
     private static final String SDK_TAG = "AppLovinSdk";
     private static final String TAG     = "AppLovinMAX";
+
+    @Nullable private FlutterPluginBinding pluginBinding;
+    @Nullable private AdInstanceManager instanceManager;
+    @Nullable private AdMessageCodec adMessageCodec;
 
     public static AppLovinMAX instance;
 
@@ -83,6 +88,13 @@ public class AppLovinMAX
     private final Map<String, String>      mAdViewPositions            = new HashMap<>( 2 );
     private final List<String>             mAdUnitIdsToShowAfterCreate = new ArrayList<>( 2 );
 
+    private static <T> T requireNonNull(T obj) {
+        if (obj == null) {
+            throw new IllegalArgumentException();
+        }
+        return obj;
+    }
+
     public static AppLovinMAX getInstance()
     {
         return instance;
@@ -104,18 +116,30 @@ public class AppLovinMAX
         //
         // instance = this;
 
+        pluginBinding = binding;
+        adMessageCodec = new AdMessageCodec(binding.getApplicationContext());
+        final MethodChannel channel = new MethodChannel(
+                binding.getBinaryMessenger(),
+                "com.applovin.applovin_max",
+                new StandardMethodCodec(adMessageCodec));
+        channel.setMethodCallHandler(this);
+        instanceManager = new AdInstanceManager(channel);
         applicationContext = binding.getApplicationContext();
 
         sharedChannel = new MethodChannel( binding.getBinaryMessenger(), "applovin_max" );
         sharedChannel.setMethodCallHandler( this );
 
-        AppLovinMAXAdViewFactory adViewFactory = new AppLovinMAXAdViewFactory( binding.getBinaryMessenger() );
-        binding.getPlatformViewRegistry().registerViewFactory( "applovin_max/adview", adViewFactory );
+        binding.getPlatformViewRegistry().registerViewFactory(
+                "applovin_max/ad_widget",
+                new AppLovinMAXAdViewFactory(instanceManager));
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding)
     {
+        if (instanceManager != null) {
+            instanceManager.disposeAllAds();
+        }
         sharedChannel.setMethodCallHandler( null );
     }
 
@@ -139,6 +163,14 @@ public class AppLovinMAX
     private void initialize(final String pluginVersion, final String sdkKey, final Result result)
     {
         // Guard against running init logic multiple times
+        if ( isSdkInitialized )
+        {
+            Map<String, Object> configuration = new HashMap<>( 2 );
+            configuration.put( "consentDialogState", sdkConfiguration.getConsentDialogState().ordinal() );
+            configuration.put( "countryCode", sdkConfiguration.getCountryCode() );
+            result.success( configuration );
+            return;
+        }
         if ( isPluginInitialized )
         {
             return;
@@ -1129,7 +1161,46 @@ public class AppLovinMAX
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result)
     {
-        if ( "initialize".equals( call.method ) )
+        if (instanceManager == null || pluginBinding == null) {
+            Log.e(TAG, "method call received before instanceManager initialized: " + call.method);
+            return;
+        }
+
+        if ("_init".equals(call.method)) {
+            instanceManager.disposeAllAds();
+            result.success(null);
+        } else if ("loadBannerAd".equals(call.method)) {
+            final FlutterBannerAd bannerAd =
+                    new FlutterBannerAd(
+                            requireNonNull(call.<Integer>argument("adId")),
+                            instanceManager,
+                            requireNonNull(call.argument("adUnitId")),
+                            call.argument("placement"),
+                            call.argument("customData"));
+            instanceManager.trackAd(
+                    bannerAd, requireNonNull(call.<Integer>argument("adId")));
+            bannerAd.load();
+            result.success(null);
+        } else if ("disposeAd".equals(call.method)) {
+            instanceManager.disposeAd(requireNonNull(call.<Integer>argument("adId")));
+            result.success(null);
+        } else if ("getAdSize".equals(call.method)) {
+            FlutterAd ad = instanceManager.adForId(
+                    requireNonNull(call.<Integer>argument("adId")));
+            if (ad == null) {
+                // This was called on a dart ad container that hasn't been loaded yet.
+                result.success(null);
+            } else if (ad instanceof FlutterBannerAd) {
+                result.success(((FlutterBannerAd) ad).getAdSize());
+            } else {
+                result.error(
+                        "unexpected_ad_type",
+                        "Unexpected ad type for getAdSize: " + ad,
+                        null);
+            }
+        }
+
+        else if ( "initialize".equals( call.method ) )
         {
             String pluginVersion = call.argument( "plugin_version" );
             String sdkKey = call.argument( "sdk_key" );
@@ -1410,10 +1481,25 @@ public class AppLovinMAX
         // Once the issue is resolved, we can check if we can move following one lines to onAttachedToEngine.
         instance = this;
         lastActivityPluginBinding = binding;
+
+        if (instanceManager != null) {
+            instanceManager.setActivity(binding.getActivity());
+        }
+        if (adMessageCodec != null) {
+            adMessageCodec.setContext(binding.getActivity());
+        }
     }
 
     @Override
-    public void onDetachedFromActivityForConfigChanges() { }
+    public void onDetachedFromActivityForConfigChanges() {
+        // Use the application context
+        if (adMessageCodec != null && pluginBinding != null) {
+            adMessageCodec.setContext(pluginBinding.getApplicationContext());
+        }
+        if (instanceManager != null) {
+            instanceManager.setActivity(null);
+        }
+    }
 
     @Override
     public void onReattachedToActivityForConfigChanges(@NonNull final ActivityPluginBinding binding)
@@ -1422,10 +1508,24 @@ public class AppLovinMAX
         // firebase_messaging plugin. See https://github.com/flutter/flutter/issues/97840
         // Once the issue is resolved, we can check if we can move following one lines to onAttachedToEngine.
         instance = this;
+
+        if (instanceManager != null) {
+            instanceManager.setActivity(binding.getActivity());
+        }
+        if (adMessageCodec != null) {
+            adMessageCodec.setContext(binding.getActivity());
+        }
     }
 
     @Override
-    public void onDetachedFromActivity() { }
+    public void onDetachedFromActivity() {
+        if (adMessageCodec != null && pluginBinding != null) {
+            adMessageCodec.setContext(pluginBinding.getApplicationContext());
+        }
+        if (instanceManager != null) {
+            instanceManager.setActivity(null);
+        }
+    }
 
     private Activity getCurrentActivity()
     {

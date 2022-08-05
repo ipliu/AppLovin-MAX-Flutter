@@ -1,59 +1,85 @@
 package com.applovin.applovin_max;
 
 import android.content.Context;
-
-import com.applovin.mediation.MaxAdFormat;
-import com.applovin.sdk.AppLovinSdk;
-
-import java.util.Map;
+import android.graphics.Color;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import io.flutter.plugin.common.BinaryMessenger;
+
+import java.util.Locale;
+
+import io.flutter.Log;
 import io.flutter.plugin.common.StandardMessageCodec;
 import io.flutter.plugin.platform.PlatformView;
 import io.flutter.plugin.platform.PlatformViewFactory;
 
-/**
- * Created by Thomas So on July 17 2022
- */
-public class AppLovinMAXAdViewFactory
-        extends PlatformViewFactory
-{
-    private final BinaryMessenger messenger;
+/** Displays loaded FlutterAds for an AdInstanceManager */
+public class AppLovinMAXAdViewFactory extends PlatformViewFactory {
+    @NonNull private final AdInstanceManager manager;
 
-    public AppLovinMAXAdViewFactory(final BinaryMessenger messenger)
-    {
-        super( StandardMessageCodec.INSTANCE );
+    private static class ErrorTextView implements PlatformView {
+        private final TextView textView;
 
-        this.messenger = messenger;
+        private ErrorTextView(Context context, String message) {
+            textView = new TextView(context);
+            textView.setText(message);
+            textView.setBackgroundColor(Color.RED);
+            textView.setTextColor(Color.YELLOW);
+        }
+
+        @Override
+        public View getView() {
+            return textView;
+        }
+
+        @Override
+        public void dispose() {}
+    }
+
+    public AppLovinMAXAdViewFactory(@NonNull AdInstanceManager manager) {
+        super(StandardMessageCodec.INSTANCE);
+        this.manager = manager;
     }
 
     @NonNull
     @Override
-    public PlatformView create(@Nullable final Context context, final int viewId, final Object rawArgs)
-    {
-        // Ensure plugin has been initialized
-        AppLovinSdk sdk = AppLovinMAX.getInstance().getSdk();
-        if ( sdk == null )
-        {
-            AppLovinMAX.e( "Failed to create MaxAdView widget - please ensure the AppLovin MAX plugin has been initialized by calling 'AppLovinMAX.initialize(...);'!" );
-            return null;
+    public PlatformView create(Context context, int viewId, Object args) {
+        final Integer adId = (Integer) args;
+        FlutterAd ad = manager.adForId(adId);
+        if (ad == null || ad.getPlatformView() == null) {
+            return getErrorView(context, adId);
         }
+        return ad.getPlatformView();
+    }
 
-        Map<String, String> args = (Map<String, String>) rawArgs;
+    /**
+     * Returns an ErrorView with a debug message for debug builds only. Otherwise just returns an
+     * empty PlatformView.
+     */
+    private static PlatformView getErrorView(@NonNull final Context context, int adId) {
+        final String message =
+                String.format(
+                        Locale.getDefault(),
+                        "This ad may have not been loaded or has been disposed. "
+                                + "Ad with the following id could not be found: %d.",
+                        adId);
 
-        String adUnitId = (String) args.get( "ad_unit_id" );
-        String adFormatStr = (String) args.get( "ad_format" );
-        MaxAdFormat adFormat = "mrec".equals( adFormatStr ) ? MaxAdFormat.MREC : AppLovinMAX.getDeviceSpecificBannerAdViewAdFormat( context );
+        if (BuildConfig.DEBUG) {
+            return new ErrorTextView(context, message);
+        } else {
+            Log.e(AppLovinMAXAdViewFactory.class.getSimpleName(), message);
+            return new PlatformView() {
+                @Override
+                public View getView() {
+                    return new View(context);
+                }
 
-        AppLovinMAX.d( "Creating MaxAdView widget with Ad Unit ID: " + adUnitId );
-
-        // Optional params
-
-        String placement = args.containsKey( "placement" ) ? (String) args.get( "placement" ) : null;
-        String customData = args.containsKey( "customData" ) ? (String) args.get( "customData" ) : null;
-
-        return new AppLovinMAXAdView( viewId, adUnitId, adFormat, placement, customData, messenger, sdk, context );
+                @Override
+                public void dispose() {
+                    // Do nothing.
+                }
+            };
+        }
     }
 }
