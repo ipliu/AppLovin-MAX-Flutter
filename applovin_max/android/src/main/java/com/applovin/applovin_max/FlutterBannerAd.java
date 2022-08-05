@@ -5,6 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.applovin.mediation.MaxAd;
 import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.ads.MaxAdView;
 
@@ -12,7 +13,7 @@ import io.flutter.plugin.platform.PlatformView;
 import io.flutter.util.Preconditions;
 
 /** A wrapper for {@link MaxAdView}. */
-public class FlutterBannerAd extends FlutterAd {
+public class FlutterBannerAd extends FlutterAd implements FlutterAdLoadCallback {
 
     private static final String TAG = "FlutterBannerAd";
 
@@ -21,6 +22,8 @@ public class FlutterBannerAd extends FlutterAd {
     @Nullable private final String placement;
     @Nullable private final String customData;
     @Nullable private MaxAdView adView;
+    private boolean isLoaded = false;
+    private boolean isDisplayed = false;
 
     /** Constructs the FlutterBannerAd. */
     public FlutterBannerAd(
@@ -39,6 +42,15 @@ public class FlutterBannerAd extends FlutterAd {
     }
 
     @Override
+    public void onAdLoaded(MaxAd ad) {
+        if (!isLoaded) {
+            isLoaded = true;
+            FlutterAd.FlutterResponseInfo responseInfo = new FlutterAd.FlutterResponseInfo(ad);
+            manager.onAdLoaded(adId, responseInfo);
+        }
+    }
+
+    @Override
     void load() {
         if (manager.getActivity() == null) {
             Log.e(TAG, "Tried to show banner ad before activity was bound to the plugin.");
@@ -50,7 +62,7 @@ public class FlutterBannerAd extends FlutterAd {
                 MaxAdFormat.BANNER,
                 AppLovinMAX.getInstance().getSdk(),
                 manager.getActivity());
-        adView.setListener(new FlutterBannerAdListener(adId, manager));
+        adView.setListener(new FlutterBannerAdListener(adId, manager, this));
 
         adView.setPlacement(placement);
         adView.setCustomData(customData);
@@ -63,6 +75,10 @@ public class FlutterBannerAd extends FlutterAd {
     public PlatformView getPlatformView() {
         if (adView == null) {
             return null;
+        }
+        if (!isDisplayed) {
+            isDisplayed = true;
+            manager.onAdDisplayed(adId);
         }
         return new FlutterPlatformView(adView);
     }

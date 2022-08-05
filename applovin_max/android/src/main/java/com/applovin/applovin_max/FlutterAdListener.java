@@ -7,6 +7,13 @@ import com.applovin.mediation.MaxAdListener;
 import com.applovin.mediation.MaxAdViewAdListener;
 import com.applovin.mediation.MaxError;
 
+import java.lang.ref.WeakReference;
+
+/** Callback type to notify when an ad successfully loads. */
+interface FlutterAdLoadCallback {
+    void onAdLoaded(MaxAd ad);
+}
+
 class FlutterAdListener implements MaxAdListener {
     protected final int adId;
     @NonNull protected final AdInstanceManager manager;
@@ -53,9 +60,34 @@ class FlutterAdListener implements MaxAdListener {
  */
 class FlutterBannerAdListener extends FlutterAdListener implements MaxAdViewAdListener {
 
-    FlutterBannerAdListener(int adId, @NonNull AdInstanceManager manager) {
+    @NonNull final WeakReference<FlutterAdLoadCallback> adLoadCallbackWeakReference;
+
+    FlutterBannerAdListener(
+            int adId, @NonNull AdInstanceManager manager, FlutterAdLoadCallback adLoadCallback) {
         super(adId, manager);
+        adLoadCallbackWeakReference = new WeakReference<>(adLoadCallback);
     }
+
+    @Override
+    public void onAdLoaded(MaxAd ad) {
+        if (adLoadCallbackWeakReference.get() != null) {
+            adLoadCallbackWeakReference.get().onAdLoaded(ad);
+        }
+    }
+
+    /**
+     *  DO NOT USE - THIS IS RESERVED FOR FULLSCREEN ADS ONLY
+     *  AND WILL BE REMOVED IN A FUTURE SDK RELEASE
+     */
+    @Override
+    public void onAdDisplayed(MaxAd ad) { }
+
+    /**
+     *  DO NOT USE - THIS IS RESERVED FOR FULLSCREEN ADS ONLY
+     *  AND WILL BE REMOVED IN A FUTURE SDK RELEASE
+     */
+    @Override
+    public void onAdHidden(MaxAd ad) { }
 
     @Override
     public void onAdExpanded(MaxAd ad) {
