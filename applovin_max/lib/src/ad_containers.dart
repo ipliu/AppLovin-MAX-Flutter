@@ -30,6 +30,48 @@ class AdError {
   }
 }
 
+/// Contains information about the loaded ad.
+class ResponseInfo {
+  /// Constructs a [ResponseInfo] with the [networkName] and [networkPlacement].
+  @protected
+  const ResponseInfo({
+    required this.networkName,
+    required this.networkPlacement,
+    this.placement,
+    this.creativeId,
+    this.revenue,
+    this.dspName});
+
+  /// The ad network for which this ad was loaded from.
+  final String networkName;
+
+  /// The ad network placement for which this ad was loaded from.
+  final String networkPlacement;
+
+  /// The ad placement which was set for this ad.
+  final String? placement;
+
+  /// The ad's creative ID, if available.
+  final String? creativeId;
+
+  /// The ad's revenue amount, or 0 if it does not exist.
+  final String? revenue;
+
+  /// The DSP network that provided the loaded ad when the ad is served through
+  /// AppLovin Exchange.
+  final String? dspName;
+
+  @override
+  String toString() {
+    return '$runtimeType(networkName: $networkName, '
+        'networkPlacement: $networkPlacement, '
+        'placement: $placement, '
+        'creativeId: $creativeId, '
+        'revenue: $revenue, '
+        'dspName: $dspName)';
+  }
+}
+
 /// [AdSize] represents the size of a banner ad.
 class AdSize {
   /// Constructs an [AdSize] with the given [width] and [height].
@@ -75,6 +117,9 @@ abstract class Ad {
   Future<void> dispose() {
     return instanceManager.disposeAd(this);
   }
+
+  /// Contains information about the loaded ad.
+  ResponseInfo? responseInfo;
 }
 
 /// Base class for mobile [Ad] that has an in-line view.

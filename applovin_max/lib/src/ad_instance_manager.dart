@@ -52,7 +52,7 @@ class AdInstanceManager {
       Ad ad, String eventName, Map<dynamic, dynamic> arguments) {
     switch (eventName) {
       case 'onAdLoaded':
-        _invokeOnAdLoaded(ad, eventName);
+        _invokeOnAdLoaded(ad, eventName, arguments);
         break;
       case 'onAdLoadFailed':
         _invokeOnAdLoadFailed(ad, eventName, arguments);
@@ -80,7 +80,9 @@ class AdInstanceManager {
     }
   }
 
-  void _invokeOnAdLoaded(Ad ad, String eventName) {
+  void _invokeOnAdLoaded(
+      Ad ad, String eventName, Map<dynamic, dynamic> arguments) {
+    ad.responseInfo = arguments['responseInfo'];
     if (ad is AdWithView) {
       ad.listener.onAdLoaded?.call(ad);
     } else {
@@ -215,6 +217,7 @@ class AdMessageCodec extends StandardMessageCodec {
   // The type values below must be consistent for each platform.
   static const int _valueAdSize = 128;
   static const int _valueAdError = 129;
+  static const int _valueResponseInfo = 130;
 
   @override
   void writeValue(WriteBuffer buffer, dynamic value) {
@@ -228,6 +231,14 @@ class AdMessageCodec extends StandardMessageCodec {
       writeValue(buffer, value.message);
       writeValue(buffer, value.mediatedCode);
       writeValue(buffer, value.mediatedMessage);
+    } else if (value is ResponseInfo) {
+      buffer.putUint8(_valueResponseInfo);
+      writeValue(buffer, value.networkName);
+      writeValue(buffer, value.networkPlacement);
+      writeValue(buffer, value.placement);
+      writeValue(buffer, value.creativeId);
+      writeValue(buffer, value.revenue);
+      writeValue(buffer, value.dspName);
     } else {
       super.writeValue(buffer, value);
     }
@@ -249,6 +260,15 @@ class AdMessageCodec extends StandardMessageCodec {
           readValueOfType(buffer.getUint8(), buffer),
           readValueOfType(buffer.getUint8(), buffer),
           readValueOfType(buffer.getUint8(), buffer),
+        );
+      case _valueResponseInfo:
+        return ResponseInfo(
+          networkName: readValueOfType(buffer.getUint8(), buffer),
+          networkPlacement: readValueOfType(buffer.getUint8(), buffer),
+          placement: readValueOfType(buffer.getUint8(), buffer),
+          creativeId: readValueOfType(buffer.getUint8(), buffer),
+          revenue: readValueOfType(buffer.getUint8(), buffer),
+          dspName: readValueOfType(buffer.getUint8(), buffer),
         );
       default:
         return super.readValueOfType(type, buffer);

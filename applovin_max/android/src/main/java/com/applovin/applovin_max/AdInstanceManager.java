@@ -83,10 +83,11 @@ class AdInstanceManager {
         ads.clear();
     }
 
-    void onAdLoaded(int adId) {
+    void onAdLoaded(int adId, FlutterAd.FlutterResponseInfo responseInfo) {
         Map<Object, Object> arguments = new HashMap<>();
         arguments.put("adId", adId);
         arguments.put("eventName", "onAdLoaded");
+        arguments.put("responseInfo", responseInfo);
         invokeOnAdEvent(arguments);
     }
 

@@ -16,6 +16,7 @@ class AdMessageCodec extends StandardMessageCodec {
     // The type values below must be consistent for each platform.
     private static final byte VALUE_AD_SIZE = (byte) 128;
     private static final byte VALUE_AD_ERROR = (byte) 129;
+    private static final byte VALUE_RESPONSE_INFO = (byte) 130;
 
     @NonNull Context context;
 
@@ -41,6 +42,15 @@ class AdMessageCodec extends StandardMessageCodec {
             writeValue(stream, error.message);
             writeValue(stream, error.mediatedCode);
             writeValue(stream, error.mediatedMessage);
+        } else if (value instanceof FlutterAd.FlutterResponseInfo) {
+            stream.write(VALUE_RESPONSE_INFO);
+            final FlutterAd.FlutterResponseInfo responseInfo = (FlutterAd.FlutterResponseInfo) value;
+            writeValue(stream, responseInfo.getNetworkName());
+            writeValue(stream, responseInfo.getNetworkPlacement());
+            writeValue(stream, responseInfo.getPlacement());
+            writeValue(stream, responseInfo.getCreativeId());
+            writeValue(stream, responseInfo.getRevenue());
+            writeValue(stream, responseInfo.getDspName());
         } else {
             super.writeValue(stream, value);
         }
@@ -48,18 +58,27 @@ class AdMessageCodec extends StandardMessageCodec {
 
     @Override
     protected Object readValueOfType(byte type, ByteBuffer buffer) {
-        if (type == VALUE_AD_SIZE) {
-            return new FlutterAdSize(
-                    (Integer) readValueOfType(buffer.get(), buffer),
-                    (Integer) readValueOfType(buffer.get(), buffer));
-        } else if (type == VALUE_AD_ERROR) {
-            return new FlutterAd.FlutterAdError(
-                    (Integer) readValueOfType(buffer.get(), buffer),
-                    (String) readValueOfType(buffer.get(), buffer),
-                    (Integer) readValueOfType(buffer.get(), buffer),
-                    (String) readValueOfType(buffer.get(), buffer));
-        } else {
-            return super.readValueOfType(type, buffer);
+        switch (type) {
+            case VALUE_AD_SIZE:
+                return new FlutterAdSize(
+                        (Integer) readValueOfType(buffer.get(), buffer),
+                        (Integer) readValueOfType(buffer.get(), buffer));
+            case VALUE_AD_ERROR:
+                return new FlutterAd.FlutterAdError(
+                        (Integer) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (Integer) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer));
+            case VALUE_RESPONSE_INFO:
+                return new FlutterAd.FlutterResponseInfo(
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer),
+                        (String) readValueOfType(buffer.get(), buffer));
+            default:
+                return super.readValueOfType(type, buffer);
         }
     }
 }

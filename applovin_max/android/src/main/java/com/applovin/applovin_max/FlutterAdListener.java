@@ -18,7 +18,8 @@ class FlutterAdListener implements MaxAdListener {
 
     @Override
     public void onAdLoaded(MaxAd ad) {
-        manager.onAdLoaded(adId);
+        FlutterAd.FlutterResponseInfo responseInfo = new FlutterAd.FlutterResponseInfo(ad);
+        manager.onAdLoaded(adId, responseInfo);
     }
 
     @Override
